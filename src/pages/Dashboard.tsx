@@ -8,92 +8,61 @@ import {
   GraduationCap, 
   Megaphone, 
   Scale,
-  Coffee
+  Coffee,
+  FolderOpen,
+  AlertCircle,
+  LucideIcon
 } from 'lucide-react';
 import AppLayout from '@/components/AppLayout';
 import CategoryCard from '@/components/CategoryCard';
 import CategorySkeleton from '@/components/CategorySkeleton';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getCategories, STRAPI_URL, type Category } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
-// Mock categories - In production, fetch from Strapi
-const mockCategories = [
-  {
-    slug: 'branding',
-    icon: Palette,
-    titleEn: 'Branding',
-    titleAr: 'العلامة التجارية',
-    descriptionEn: 'Logo guidelines, color palettes, and brand identity standards',
-    descriptionAr: 'إرشادات الشعار ولوحات الألوان ومعايير هوية العلامة التجارية',
-    documentCount: 12
-  },
-  {
-    slug: 'operations',
-    icon: Settings2,
-    titleEn: 'Operations',
-    titleAr: 'العمليات',
-    descriptionEn: 'Daily procedures, equipment manuals, and operational checklists',
-    descriptionAr: 'الإجراءات اليومية وأدلة المعدات وقوائم التحقق التشغيلية',
-    documentCount: 24
-  },
-  {
-    slug: 'recipes',
-    icon: UtensilsCrossed,
-    titleEn: 'Recipes',
-    titleAr: 'الوصفات',
-    descriptionEn: 'Signature drinks, food recipes, and preparation guides',
-    descriptionAr: 'المشروبات المميزة ووصفات الطعام وأدلة التحضير',
-    documentCount: 45
-  },
-  {
-    slug: 'training',
-    icon: GraduationCap,
-    titleEn: 'Training',
-    titleAr: 'التدريب',
-    descriptionEn: 'Staff training materials, onboarding guides, and certifications',
-    descriptionAr: 'مواد تدريب الموظفين وأدلة الإعداد والشهادات',
-    documentCount: 18
-  },
-  {
-    slug: 'marketing',
-    icon: Megaphone,
-    titleEn: 'Marketing',
-    titleAr: 'التسويق',
-    descriptionEn: 'Campaign materials, social media templates, and promotional guides',
-    descriptionAr: 'مواد الحملات وقوالب وسائل التواصل الاجتماعي وأدلة الترويج',
-    documentCount: 31
-  },
-  {
-    slug: 'legal',
-    icon: Scale,
-    titleEn: 'Legal',
-    titleAr: 'القانونية',
-    descriptionEn: 'Franchise agreements, compliance documents, and legal policies',
-    descriptionAr: 'اتفاقيات الامتياز ووثائق الامتثال والسياسات القانونية',
-    documentCount: 8
-  },
-];
+// Icon mapping for categories
+const iconMap: Record<string, LucideIcon> = {
+  branding: Palette,
+  operations: Settings2,
+  recipes: UtensilsCrossed,
+  training: GraduationCap,
+  marketing: Megaphone,
+  legal: Scale,
+  default: FolderOpen,
+};
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { isRTL, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
-  const [categories, setCategories] = useState<typeof mockCategories>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulate API fetch with loading state
   useEffect(() => {
-    setIsLoading(true);
-    
-    // Simulate network delay - replace with actual Strapi API call
-    const timer = setTimeout(() => {
-      setCategories(mockCategories);
-      setIsLoading(false);
-    }, 600);
+    const fetchCategories = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const response = await getCategories(language);
+        setCategories(response.data || []);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load categories');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchCategories();
   }, [language]);
+
+  const getIconForCategory = (slug: string): LucideIcon => {
+    return iconMap[slug.toLowerCase()] || iconMap.default;
+  };
 
   return (
     <AppLayout>
@@ -129,21 +98,59 @@ const Dashboard = () => {
           {/* Loading State */}
           {isLoading && <CategorySkeleton count={6} />}
 
+          {/* Error State */}
+          {!isLoading && error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <AlertCircle className="w-16 h-16 text-destructive/50 mx-auto mb-4" />
+              <p className="text-destructive mb-4">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+              >
+                {isRTL ? 'حاول مرة أخرى' : 'Try Again'}
+              </Button>
+            </motion.div>
+          )}
+
           {/* Categories Grid */}
-          {!isLoading && (
+          {!isLoading && !error && categories.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {categories.map((category, index) => (
-                <CategoryCard
-                  key={category.slug}
-                  title={language === 'ar' ? category.titleAr : category.titleEn}
-                  description={language === 'ar' ? category.descriptionAr : category.descriptionEn}
-                  icon={category.icon}
-                  slug={category.slug}
-                  documentCount={category.documentCount}
-                  index={index}
-                />
-              ))}
+              {categories.map((category, index) => {
+                const attrs = category.attributes;
+                const title = language === 'ar' && attrs.nameAr ? attrs.nameAr : attrs.name;
+                const description = language === 'ar' && attrs.descriptionAr ? attrs.descriptionAr : attrs.description;
+                
+                return (
+                  <CategoryCard
+                    key={category.id}
+                    title={title}
+                    description={description}
+                    icon={getIconForCategory(attrs.slug)}
+                    slug={attrs.slug}
+                    documentCount={attrs.documentsCount || 0}
+                    index={index}
+                  />
+                );
+              })}
             </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !error && categories.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <FolderOpen className={cn("w-16 h-16 text-muted-foreground/50 mx-auto mb-4", isRTL && "scale-x-[-1]")} />
+              <p className="text-muted-foreground">
+                {isRTL ? 'لا توجد فئات متاحة' : 'No categories available'}
+              </p>
+            </motion.div>
           )}
         </section>
       </div>
