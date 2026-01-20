@@ -1,6 +1,8 @@
 // Strapi API Configuration
-// Change this to your Strapi server URL
 export const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
+
+// API Token for Strapi requests (for production, move to secure environment variables)
+const STRAPI_API_TOKEN = '3709ec419c6291f3928fba5b64e87c1b09569d3fa187d0b757d476b489f966877f96e361c63287abfa08080ec25bf2be22f9e364b6b15c448281152bc1b3dbe9c9c00497404f139cca6e6c7fec91698377de4dcb5bc4ed7c8d9c0d985e7c8d083d0359ed6eba25067a18d38c882c340e74e569f7da67f1acb473df6d4b029fd3';
 
 interface LoginCredentials {
   identifier: string;
@@ -87,7 +89,6 @@ const apiRequest = async <T>(
   options: RequestInit = {},
   locale?: string
 ): Promise<T> => {
-  const token = getToken();
   const url = new URL(`${STRAPI_URL}/api${endpoint}`);
   
   if (locale) {
@@ -98,7 +99,7 @@ const apiRequest = async <T>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
+      Authorization: `Bearer ${STRAPI_API_TOKEN}`,
       ...options.headers,
     },
   });
