@@ -1,9 +1,11 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, FolderOpen } from 'lucide-react';
 import AppLayout from '@/components/AppLayout';
 import DocumentCard from '@/components/DocumentCard';
+import DocumentSkeleton from '@/components/DocumentSkeleton';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -18,7 +20,8 @@ const mockDocuments = {
       description: 'Complete guide to using the Waynes Coffee logo across different media and applications.',
       descriptionAr: 'دليل كامل لاستخدام شعار واينز كوفي عبر وسائل وتطبيقات مختلفة.',
       createdAt: '2024-01-15',
-      tags: ['Logo', 'Guidelines', 'Brand']
+      tags: ['Logo', 'Guidelines', 'Brand'],
+      fileUrl: 'https://example.com/logo-guidelines.pdf'
     },
     {
       id: 2,
@@ -27,7 +30,8 @@ const mockDocuments = {
       description: 'Official color codes and usage guidelines for print and digital media.',
       descriptionAr: 'رموز الألوان الرسمية وإرشادات الاستخدام للوسائط المطبوعة والرقمية.',
       createdAt: '2024-01-10',
-      tags: ['Colors', 'Design', 'Brand']
+      tags: ['Colors', 'Design', 'Brand'],
+      fileUrl: 'https://example.com/color-palette.pdf'
     },
     {
       id: 3,
@@ -36,7 +40,8 @@ const mockDocuments = {
       description: 'Font families, sizes, and hierarchy guidelines for all brand communications.',
       descriptionAr: 'عائلات الخطوط وأحجامها وإرشادات التسلسل الهرمي لجميع اتصالات العلامة التجارية.',
       createdAt: '2024-01-08',
-      tags: ['Typography', 'Fonts']
+      tags: ['Typography', 'Fonts'],
+      fileUrl: 'https://example.com/typography.pdf'
     },
   ],
   operations: [
@@ -47,7 +52,8 @@ const mockDocuments = {
       description: 'Step-by-step guide for opening the store each day.',
       descriptionAr: 'دليل خطوة بخطوة لفتح المتجر كل يوم.',
       createdAt: '2024-02-01',
-      tags: ['Operations', 'Daily']
+      tags: ['Operations', 'Daily'],
+      fileUrl: 'https://example.com/opening-procedures.pdf'
     },
     {
       id: 5,
@@ -56,7 +62,8 @@ const mockDocuments = {
       description: 'Maintenance schedules and procedures for all coffee equipment.',
       descriptionAr: 'جداول الصيانة والإجراءات لجميع معدات القهوة.',
       createdAt: '2024-01-28',
-      tags: ['Equipment', 'Maintenance']
+      tags: ['Equipment', 'Maintenance'],
+      fileUrl: 'https://example.com/equipment-manual.pdf'
     },
   ],
   recipes: [
@@ -67,7 +74,8 @@ const mockDocuments = {
       description: 'All signature Waynes Coffee drink recipes with exact measurements.',
       descriptionAr: 'جميع وصفات مشروبات واينز كوفي المميزة مع القياسات الدقيقة.',
       createdAt: '2024-02-10',
-      tags: ['Coffee', 'Recipes', 'Signature']
+      tags: ['Coffee', 'Recipes', 'Signature'],
+      fileUrl: 'https://example.com/recipes.pdf'
     },
   ],
   training: [
@@ -78,7 +86,8 @@ const mockDocuments = {
       description: 'Complete barista training curriculum and certification requirements.',
       descriptionAr: 'منهج تدريب الباريستا الكامل ومتطلبات الشهادات.',
       createdAt: '2024-01-20',
-      tags: ['Training', 'Barista', 'Certification']
+      tags: ['Training', 'Barista', 'Certification'],
+      fileUrl: 'https://example.com/barista-training.pdf'
     },
   ],
   marketing: [
@@ -89,7 +98,8 @@ const mockDocuments = {
       description: 'Best practices and templates for social media marketing.',
       descriptionAr: 'أفضل الممارسات والقوالب لتسويق وسائل التواصل الاجتماعي.',
       createdAt: '2024-02-05',
-      tags: ['Social Media', 'Marketing']
+      tags: ['Social Media', 'Marketing'],
+      fileUrl: 'https://example.com/social-media.pdf'
     },
   ],
   legal: [
@@ -100,7 +110,8 @@ const mockDocuments = {
       description: 'Standard franchise agreement and terms for UAE operations.',
       descriptionAr: 'اتفاقية الامتياز القياسية والشروط لعمليات الإمارات.',
       createdAt: '2024-01-05',
-      tags: ['Legal', 'Agreement', 'UAE']
+      tags: ['Legal', 'Agreement', 'UAE'],
+      fileUrl: 'https://example.com/franchise-agreement.pdf'
     },
   ],
 };
@@ -118,12 +129,30 @@ const Documents = () => {
   const { t } = useTranslation();
   const { categorySlug } = useParams<{ categorySlug: string }>();
   const { isRTL, language } = useLanguage();
+  const [isLoading, setIsLoading] = useState(true);
+  const [documents, setDocuments] = useState<typeof mockDocuments.branding>([]);
 
-  const documents = categorySlug ? mockDocuments[categorySlug as keyof typeof mockDocuments] || [] : [];
+  // Simulate API fetch with loading state
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Simulate network delay - replace with actual Strapi API call
+    const timer = setTimeout(() => {
+      const docs = categorySlug 
+        ? mockDocuments[categorySlug as keyof typeof mockDocuments] || []
+        : [];
+      setDocuments(docs);
+      setIsLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [categorySlug, language]);
+
   const categoryName = categorySlug 
     ? (language === 'ar' ? categoryNames[categorySlug]?.ar : categoryNames[categorySlug]?.en) 
     : t('documents.title');
 
+  // Use appropriate back arrow based on direction
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
   return (
@@ -146,15 +175,18 @@ const Documents = () => {
           </Link>
 
           <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-            <FolderOpen className="w-8 h-8 text-primary" />
+            <FolderOpen className={cn("w-8 h-8 text-primary", isRTL && "scale-x-[-1]")} />
             <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
               {categoryName}
             </h1>
           </div>
         </motion.div>
 
+        {/* Loading State */}
+        {isLoading && <DocumentSkeleton count={4} />}
+
         {/* Documents List */}
-        {documents.length > 0 ? (
+        {!isLoading && documents.length > 0 && (
           <div className="space-y-4">
             {documents.map((doc, index) => (
               <DocumentCard
@@ -163,17 +195,21 @@ const Documents = () => {
                 description={language === 'ar' ? doc.descriptionAr : doc.description}
                 createdAt={doc.createdAt}
                 tags={doc.tags}
+                fileUrl={doc.fileUrl}
                 index={index}
               />
             ))}
           </div>
-        ) : (
+        )}
+
+        {/* Empty State */}
+        {!isLoading && documents.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-16"
           >
-            <FolderOpen className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+            <FolderOpen className={cn("w-16 h-16 text-muted-foreground/50 mx-auto mb-4", isRTL && "scale-x-[-1]")} />
             <p className="text-muted-foreground">{t('documents.empty')}</p>
           </motion.div>
         )}
