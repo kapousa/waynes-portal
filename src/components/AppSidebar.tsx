@@ -5,7 +5,6 @@ import {
   LayoutDashboard, 
   FileText, 
   Search, 
-  Settings, 
   LogOut,
   Menu,
   X,
@@ -37,7 +36,10 @@ const AppSidebar = ({ isOpen, onToggle }: AppSidebarProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const CollapseIcon = isRTL ? (isOpen ? ChevronRight : ChevronLeft) : (isOpen ? ChevronLeft : ChevronRight);
+  // Use correct chevron direction for collapse/expand
+  const CollapseIcon = isRTL 
+    ? (isOpen ? ChevronRight : ChevronLeft) 
+    : (isOpen ? ChevronLeft : ChevronRight);
 
   return (
     <>
@@ -92,32 +94,38 @@ const AppSidebar = ({ isOpen, onToggle }: AppSidebarProps) => {
 
         {/* Navigation */}
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group",
-                isActive(item.path)
-                  ? "bg-primary text-primary-foreground shadow-soft"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent"
-              )}
-            >
-              <item.icon className={cn(
-                "w-5 h-5 shrink-0 transition-transform",
-                !isActive(item.path) && "group-hover:scale-110"
-              )} />
-              {isOpen && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="font-medium whitespace-nowrap"
-                >
-                  {item.label}
-                </motion.span>
-              )}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group",
+                  isActive(item.path)
+                    ? "bg-primary text-primary-foreground shadow-soft"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent",
+                  isRTL && "flex-row-reverse"
+                )}
+              >
+                {/* Icons mirror in RTL */}
+                <IconComponent className={cn(
+                  "w-5 h-5 shrink-0 transition-transform",
+                  !isActive(item.path) && "group-hover:scale-110",
+                  isRTL && "scale-x-[-1]"
+                )} />
+                {isOpen && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="font-medium whitespace-nowrap"
+                  >
+                    {item.label}
+                  </motion.span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Footer */}
@@ -127,10 +135,12 @@ const AppSidebar = ({ isOpen, onToggle }: AppSidebarProps) => {
             onClick={logout}
             className={cn(
               "w-full justify-start gap-3 px-3 py-3 h-auto text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive",
-              !isOpen && "justify-center"
+              !isOpen && "justify-center",
+              isRTL && "flex-row-reverse"
             )}
           >
-            <LogOut className="w-5 h-5 shrink-0" />
+            {/* Logout icon mirrors in RTL */}
+            <LogOut className={cn("w-5 h-5 shrink-0", isRTL && "scale-x-[-1]")} />
             {isOpen && <span className="font-medium">{t('nav.logout')}</span>}
           </Button>
         </div>

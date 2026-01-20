@@ -15,6 +15,7 @@ interface CategoryCardProps {
 
 const CategoryCard = ({ title, description, icon: Icon, slug, documentCount = 0, index = 0 }: CategoryCardProps) => {
   const { isRTL } = useLanguage();
+  // Use appropriate arrow based on direction
   const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
 
   return (
@@ -28,9 +29,9 @@ const CategoryCard = ({ title, description, icon: Icon, slug, documentCount = 0,
         className="group block p-6 bg-card rounded-xl border border-border shadow-soft hover:shadow-medium transition-all duration-300 hover:border-primary/30"
       >
         <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
-          {/* Icon Container */}
+          {/* Icon Container - icon mirrors in RTL */}
           <div className="shrink-0 w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-            <Icon className="w-7 h-7 text-primary" />
+            <Icon className={cn("w-7 h-7 text-primary", isRTL && "scale-x-[-1]")} />
           </div>
 
           {/* Content */}
@@ -39,7 +40,11 @@ const CategoryCard = ({ title, description, icon: Icon, slug, documentCount = 0,
               <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                 {title}
               </h3>
-              <ArrowIcon className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-all" />
+              {/* Arrow animates in the correct direction */}
+              <ArrowIcon className={cn(
+                "w-5 h-5 text-muted-foreground group-hover:text-primary transition-all",
+                isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"
+              )} />
             </div>
             <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
               {description}

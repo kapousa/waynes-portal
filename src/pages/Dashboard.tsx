@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { 
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import AppLayout from '@/components/AppLayout';
 import CategoryCard from '@/components/CategoryCard';
+import CategorySkeleton from '@/components/CategorySkeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -77,6 +79,21 @@ const Dashboard = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { isRTL, language } = useLanguage();
+  const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState<typeof mockCategories>([]);
+
+  // Simulate API fetch with loading state
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Simulate network delay - replace with actual Strapi API call
+    const timer = setTimeout(() => {
+      setCategories(mockCategories);
+      setIsLoading(false);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [language]);
 
   return (
     <AppLayout>
@@ -88,7 +105,7 @@ const Dashboard = () => {
           className="mb-8"
         >
           <div className={cn("flex items-center gap-3 mb-2", isRTL && "flex-row-reverse")}>
-            <Coffee className="w-8 h-8 text-primary" />
+            <Coffee className={cn("w-8 h-8 text-primary", isRTL && "scale-x-[-1]")} />
             <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
               {t('dashboard.welcome')}, {user?.username || 'Partner'}
             </h1>
@@ -109,19 +126,25 @@ const Dashboard = () => {
             {t('dashboard.categories')}
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {mockCategories.map((category, index) => (
-              <CategoryCard
-                key={category.slug}
-                title={language === 'ar' ? category.titleAr : category.titleEn}
-                description={language === 'ar' ? category.descriptionAr : category.descriptionEn}
-                icon={category.icon}
-                slug={category.slug}
-                documentCount={category.documentCount}
-                index={index}
-              />
-            ))}
-          </div>
+          {/* Loading State */}
+          {isLoading && <CategorySkeleton count={6} />}
+
+          {/* Categories Grid */}
+          {!isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {categories.map((category, index) => (
+                <CategoryCard
+                  key={category.slug}
+                  title={language === 'ar' ? category.titleAr : category.titleEn}
+                  description={language === 'ar' ? category.descriptionAr : category.descriptionEn}
+                  icon={category.icon}
+                  slug={category.slug}
+                  documentCount={category.documentCount}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </AppLayout>

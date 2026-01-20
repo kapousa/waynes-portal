@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, Download, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
+import { FileText, Download, Calendar, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -25,9 +25,10 @@ const DocumentCard = ({
 }: DocumentCardProps) => {
   const { isRTL } = useLanguage();
 
-  const handleDownload = () => {
+  const handleOpenPdf = () => {
     if (fileUrl) {
-      window.open(fileUrl, '_blank');
+      // Opens PDF in a new tab
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -47,9 +48,9 @@ const DocumentCard = ({
       className="group p-5 bg-card rounded-xl border border-border shadow-soft hover:shadow-medium transition-all duration-300"
     >
       <div className={cn("flex gap-4", isRTL && "flex-row-reverse")}>
-        {/* Icon */}
+        {/* Icon - mirrors in RTL */}
         <div className="shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-          <FileText className="w-6 h-6 text-primary" />
+          <FileText className={cn("w-6 h-6 text-primary", isRTL && "scale-x-[-1]")} />
         </div>
 
         {/* Content */}
@@ -84,13 +85,14 @@ const DocumentCard = ({
 
             <Button
               size="sm"
-              onClick={handleDownload}
+              onClick={handleOpenPdf}
               disabled={!fileUrl}
               className="h-8 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              <Download className={cn("w-4 h-4", isRTL && "flip-rtl")} />
+              {/* Icon mirrors in RTL for directional consistency */}
+              <ExternalLink className={cn("w-4 h-4", isRTL && "scale-x-[-1]")} />
               <span className="hidden sm:inline">
-                {isRTL ? 'تحميل PDF' : 'Download PDF'}
+                {isRTL ? 'فتح PDF' : 'Open PDF'}
               </span>
             </Button>
           </div>
