@@ -117,17 +117,15 @@ const Documents = () => {
                 {/* Documents List */}
                 {!isLoading && !error && documents.length > 0 && (
                     <div className="space-y-4">
-
-
                         {documents.map((doc: any, index: number) => {
-                            // We use 'any' here to stop TypeScript from enforcing the old interface
                             const data = doc.attributes ? doc.attributes : doc;
-
                             if (!data) return null;
 
                             const title = language === 'ar' && data.titleAr ? data.titleAr : data.title;
                             const description = language === 'ar' && data.descriptionAr ? data.descriptionAr : data.description;
 
+                            // CTO FIX: Pass the specific field data directly to the helper
+                            // Or update your helper to handle specific field extraction
                             return (
                                 <DocumentCard
                                     key={doc.id || index}
@@ -135,11 +133,13 @@ const Documents = () => {
                                     description={description || ''}
                                     createdAt={data.createdAt}
                                     tags={data.tags || []}
-                                    fileUrl={getFileUrl(doc)}
+                                    fileUrl={getFileUrl({file: data.file})}
+                                    fileUrlAr={getFileUrl({file: data.fileAr})}
                                     index={index}
                                 />
                             );
-                        })}  </div>
+                        })}
+                    </div>
                 )}
 
                 {/* Empty State */}
