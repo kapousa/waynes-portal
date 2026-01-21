@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion';
-import { FileText, Download, Calendar, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FileText, Calendar, ExternalLink, Eye, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -14,20 +15,19 @@ interface DocumentCardProps {
   index?: number;
 }
 
-const DocumentCard = ({ 
-  title, 
-  description, 
-  fileUrl, 
-  fileName,
-  createdAt, 
+const DocumentCard = ({
+  title,
+  description,
+  fileUrl,
+  createdAt,
   tags = [],
-  index = 0 
+  index = 0
 }: DocumentCardProps) => {
   const { isRTL } = useLanguage();
+  const [isViewing, setIsViewing] = useState(false); // State to toggle the reader
 
-  const handleOpenPdf = () => {
+  const handleOpenNewTab = () => {
     if (fileUrl) {
-      // Opens PDF in a new tab
       window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
@@ -41,64 +41,89 @@ const DocumentCard = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.08 }}
-      className="group p-5 bg-card rounded-xl border border-border shadow-soft hover:shadow-medium transition-all duration-300"
-    >
-      <div className={cn("flex gap-4", isRTL && "flex-row-reverse")}>
-        {/* Icon - mirrors in RTL */}
-        <div className="shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-          <FileText className={cn("w-6 h-6 text-primary", isRTL && "scale-x-[-1]")} />
-        </div>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.08 }}
+        className="group p-5 bg-card rounded-xl border border-border shadow-soft hover:shadow-medium transition-all duration-300"
+      >
+        <div className={cn("flex gap-4", isRTL && "flex-row-reverse")}>
+          <div className="shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+            <FileText className={cn("w-6 h-6 text-primary", isRTL && "scale-x-[-1]")} />
+          </div>
 
-        {/* Content */}
-        <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-          <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
-            {title}
-          </h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-            {description}
-          </p>
+          <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+            <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+              {title}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+              {description}
+            </p>
 
-          {/* Tags */}
-          {tags.length > 0 && (
-            <div className={cn("flex flex-wrap gap-1.5 mb-3", isRTL && "justify-end")}>
-              {tags.slice(0, 3).map((tag, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 rounded-md bg-accent text-xs text-accent-foreground"
+            {/* Footer Actions */}
+            <div className={cn("flex items-center justify-between pt-2 border-t border-border", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-1.5 text-xs text-muted-foreground", isRTL && "flex-row-reverse")}>
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{formatDate(createdAt)}</span>
+              </div>
+
+              <div className="flex gap-2">
+                {/* READ & SCROLL BUTTON */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsViewing(true)}
+                  disabled={!fileUrl}
+                  className="h-8 gap-1.5"
                 >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
+                  <Eye className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    {isRTL ? 'قراءة' : 'Read'}
+                  </span>
+                </Button>
 
-          {/* Footer */}
-          <div className={cn("flex items-center justify-between pt-2 border-t border-border", isRTL && "flex-row-reverse")}>
-            <div className={cn("flex items-center gap-1.5 text-xs text-muted-foreground", isRTL && "flex-row-reverse")}>
-              <Calendar className="w-3.5 h-3.5" />
-              <span>{formatDate(createdAt)}</span>
+                {/* OPEN IN NEW TAB BUTTON */}
+                <Button
+                  size="sm"
+                  onClick={handleOpenNewTab}
+                  disabled={!fileUrl}
+                  className="h-8 gap-1.5 bg-primary text-primary-foreground"
+                >
+                  <ExternalLink className={cn("w-4 h-4", isRTL && "scale-x-[-1]")} />
+                </Button>
+              </div>
             </div>
-
-            <Button
-              size="sm"
-              onClick={handleOpenPdf}
-              disabled={!fileUrl}
-              className="h-8 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              {/* Icon mirrors in RTL for directional consistency */}
-              <ExternalLink className={cn("w-4 h-4", isRTL && "scale-x-[-1]")} />
-              <span className="hidden sm:inline">
-                {isRTL ? 'فتح PDF' : 'Open PDF'}
-              </span>
-            </Button>
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+
+      {/* FULL SCREEN PDF READER OVERLAY */}
+      <AnimatePresence>
+        {isViewing && fileUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col p-4 md:p-8"
+          >
+            <div className="flex justify-between items-center mb-4 bg-card p-4 rounded-t-xl border-b">
+              <h2 className="text-xl font-bold">{title}</h2>
+              <Button variant="ghost" size="icon" onClick={() => setIsViewing(false)}>
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+
+            {/* The Iframe allows the user to read and scroll the PDF */}
+            <iframe
+              src={`${fileUrl}#toolbar=0`}
+              className="w-full h-full rounded-b-xl border shadow-2xl bg-white"
+              title={title}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

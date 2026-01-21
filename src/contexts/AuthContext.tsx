@@ -36,21 +36,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      // Try actual Strapi login first
+      // CTO FIX: Remove demo fallback to see real errors
       const response = await apiLogin({ identifier: email, password });
       setUser(response.user);
       setIsLoggedIn(true);
     } catch (error) {
-      // Fallback to demo mode if Strapi is not available
-      // In production, remove this fallback
-      console.log('Strapi unavailable, using demo mode');
-      setToken('demo-token');
-      setCurrentUser(DEMO_USER);
-      setUser(DEMO_USER);
-      setIsLoggedIn(true);
+      console.error('Login failed:', error);
+      // Re-throw the error so the UI can show a proper "Invalid credentials" message
+      throw error;
     }
   };
-
   const logout = () => {
     apiLogout();
     setUser(null);
