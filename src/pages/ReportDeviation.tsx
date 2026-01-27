@@ -2,9 +2,12 @@ import AppLayout from "@/components/AppLayout";
 import DeviationForm from "@/components/DeviationForm";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import {cn} from "@/lib/utils.ts";
+import {useLanguage} from "@/contexts/LanguageContext.tsx";
 
 const ReportDeviation = () => {
   const { t } = useTranslation();
+  const { isRTL } = useLanguage();
 
   return (
     <AppLayout>
@@ -15,10 +18,16 @@ const ReportDeviation = () => {
           className="bg-card border rounded-xl shadow-sm overflow-hidden"
         >
           {/* Reuse the styling from your Documents page header */}
-          <div className="p-6 border-b bg-slate-50/50">
+          <div className={cn(
+            "p-6 border-b bg-slate-50/50", isRTL ? "text-right" : "text-left"
+          )}>
+            {/* This uses the translation keys we added above */}
             <h1 className="text-2xl font-bold text-slate-900">
-              {t("Product Deviation Reporting")}
+              {t("deviation.title")}
             </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("deviation.subtitle")}
+            </p>
           </div>
 
           <div className="p-6 md:p-10">
