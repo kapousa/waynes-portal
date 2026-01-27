@@ -7,6 +7,7 @@ const resources = {
       // Navigation
       "nav.dashboard": "Dashboard",
       "nav.documents": "Documents",
+      "nav.forms": "Forms",
       "nav.search": "Search",
       "nav.settings": "Settings",
       "nav.logout": "Logout",
@@ -58,6 +59,7 @@ const resources = {
       // Navigation
       "nav.dashboard": "لوحة التحكم",
       "nav.documents": "المستندات",
+      "nav.forms": "الاستمارات",
       "nav.search": "بحث",
       "nav.settings": "الإعدادات",
       "nav.logout": "تسجيل الخروج",
