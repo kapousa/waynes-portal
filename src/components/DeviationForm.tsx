@@ -26,38 +26,49 @@ const DeviationForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  // Inside DeviationForm.tsx
 
-    const data = new FormData();
-    data.append('data', JSON.stringify({
-      ...formData,
-      locale: language // Sends 'en', 'sv', or 'ar' based on your portal settings
-    }));
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
 
-    if (file) {
-      data.append('files.picture_of_the_deviation', file);
-    }
+  // 1. Get the token from local storage
+  const token = localStorage.getItem('token');
 
-    try {
-      const response = await fetch('https://waynes-portal-cms.onrender.com/api/deviation-reports', {
-        method: 'POST',
-        body: data,
-      });
+  const data = new FormData();
+  data.append('data', JSON.stringify({
+    ...formData,
+    locale: language
+  }));
 
-      if (response.ok) {
-        setIsSuccess(true);
-        toast.success(t('deviation.success'));
-      } else {
-        toast.error(t('deviation.error'));
-      }
-    } catch (error) {
+  if (file) {
+    data.append('files.picture_of_the_deviation', file);
+  }
+
+  try {
+    const response = await fetch('https://waynes-portal-cms.onrender.com/api/deviation-reports', {
+      method: 'POST',
+      headers: {
+        // 2. Add the Authorization header
+        'Authorization': `Bearer ${token}`,
+      },
+      body: data,
+    });
+
+    if (response.ok) {
+      setIsSuccess(true);
+      toast.success(t('deviation.success'));
+    } else if (response.status === 403) {
+      toast.error("You don't have permission to submit this form. Please log in again.");
+    } else {
       toast.error(t('deviation.error'));
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } catch (error) {
+    toast.error(t('deviation.error'));
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <AnimatePresence mode="wait">
